@@ -1,0 +1,88 @@
+tasks:
+- id: spec-v1-log-tailer
+  title: spec-v1-log-tailer
+  category: blocker
+  status: not_started
+  dependencies: []
+  description: |
+    Extracted from spec-v1 Task 15/18 description.
+
+    Real log-tailer for the spec runner: a background place (or thread via
+    `ffi/unsafe/os-thread`) that tails `events.log` on the VM via
+    `testanyware exec`, accumulates lines into a shared buffer, and exposes a
+    `make-log-tail-fn` constructor that the runner driver can install as
+    `driver-log-tail`. Currently deferred from Task 15; harness verbs use the
+    driver-injected `log-tail` field so unit tests are unaffected, but the live
+    runner (Task 26) has no real tail until this lands.
+
+    **Why it needs its own task:** embedded in the spec-v1 description as a
+    parenthetical deferral, so it will remain invisible until Task 26 runs and
+    fails to find it. Promoting it surfaces it as schedulable, parallel work
+    alongside Tasks 18–25.
+
+    **Gating:** required before Task 26 (live-VM shake-down); independent of
+    Tasks 18–25.
+- id: app-spec-v1
+  title: app-spec-v1
+  category: feature
+  status: in_progress
+  dependencies: []
+  description: |
+    Plan in progress, Tasks 25–26 remaining. Tasks 1–24 complete; Tasks 25–26 queued.
+
+    Full automated live VM verification of every feature — App-Spec, the
+    spec-system tool extracted from `Modaliser-Racket/spec/` to top-level
+    `AppSpec/` on 2026-04-26 per the APIAnyware reorg.
+
+    Design doc: `AppSpec/docs/superpowers/specs/2026-04-18-app-spec-design.md`.
+    Plan: `AppSpec/docs/superpowers/plans/2026-04-18-app-spec-v1.md` (26 tasks).
+
+    **What's done (Tasks 1–24):**
+    - Impl log gaps closed: `[lifecycle] shutdown reason=signal|error`, `[window] focus` on implicit focus
+    - `AppSpec/` scaffold: full tree, `info.rkt` (`'multi` collection), `README.md`, `run.sh`
+    - Contract docs: `APIAnyware-MacOS/knowledge/apps/modaliser/logging-contract.md`, `APIAnyware-MacOS/knowledge/apps/modaliser/observable-state.md`
+    - Language layer: `#lang app-spec/impl` + `#lang app-spec` (scenario DSL)
+    - Impl descriptors: `APIAnyware-MacOS/generation/targets/racket-oo/apps/modaliser/modaliser-impl.rkt`, `AppSpec/tests/impls/null.rkt`
+    - testanyware-sdk: `exec.rkt`, `input.rkt`, `screenshot.rkt`, `agent.rkt`, `macos-helpers.rkt`
+    - Runner harness layer: `AppSpec/runner/driver.rkt`, `harness-inputs.rkt`, `harness-logs.rkt`,
+      `harness-observations.rkt`, `harness-state.rkt`, `lifecycle.rkt`
+    - `AppSpec/tests/run-all.sh` + 12 passing spec test files
+    - Runner CLI: `AppSpec/runner/impl-config.rkt`, `dispatch.rkt`, `main.rkt`; `AppSpec/run.sh`
+      rewired for flags-first argv; meaningful-failure smoke produces `testanyware: binary not found on PATH`
+    - `AppSpec/config/test-config.scm`: covers every event in `logging-contract.md`
+    - `APIAnyware-MacOS/knowledge/apps/modaliser/scenarios/helpers/{platform,quick-launch,common-setups}.rkt` (Task 20)
+    - `APIAnyware-MacOS/knowledge/apps/modaliser/scenarios/lifecycle/0{1,2,3}-*.rkt` (Task 21): startup, shutdown-menu, single-instance
+    - `APIAnyware-MacOS/knowledge/apps/modaliser/scenarios/modal/0{1,2,3}-*.rkt` (Task 22): leader-enter-exit, group-navigation, timeout-watchdog
+    - `APIAnyware-MacOS/knowledge/apps/modaliser/scenarios/choosers/0{1,2,3}-*.rkt` (Task 23): find-apps-search, escape-dismiss, mru-across-restart
+    - `APIAnyware-MacOS/knowledge/apps/modaliser/scenarios/launch/01-quick-launch.rkt` (Task 24): table-driven, one scenario per quick-launch binding
+    - `APIAnyware-MacOS/knowledge/apps/modaliser/scenarios/windows/01-focus-move-restore.rkt` (Task 24): center/fullscreen/restore assertions
+
+    Key design decisions locked:
+    - `#lang app-spec` registered via `current-library-collection-paths` push at runner startup
+    - Driver pattern (struct of functions + `current-driver` parameter) for harness verbs
+    - Scenario registration via `scenario-registry` parameter; runner calls `reset-scenarios!` before each `dynamic-require`
+    - Verification is three-tiered: spec unit tests (VM-free) → null-impl smoke (VM-free) → live-VM shake-down (gated on TestAnyware Task 8)
+    - All VM paths are kwargs with defaults; unit tests inject temp dirs and `#:settle-delay 0`
+    - Config DSL uses `(key K LABEL THUNK)` / `(group K LABEL …)` / `(selector K LABEL 'prop val …)` — no `action` form
+    - All spec log regexes use `wait-for-log` (not `expect-log`) and quote string values (e.g., `tree="global"`)
+
+    **What remains (Tasks 25–26):**
+    - `.gitignore` updates for any remaining generated outputs (Task 25 — `APIAnyware-MacOS/knowledge/apps/modaliser/artifacts/` already covered; likely a no-op after verification)
+    - Null-impl meaningful-failure smoke (validates spec framework works without a real impl) — Task 26 Step 4
+    - Success-criteria verification: `rg 'require\s+"\.\./\.\.'` guard on `AppSpec/` and `APIAnyware-MacOS/knowledge/apps/modaliser/scenarios/`, review against design doc
+    - Live-VM shake-down (Task 26 Step 6, gated on TestAnyware Task 8 + spec-v1-log-tailer)
+
+    **Open gap surfaced by Task 21:** Scenario 03 (single-instance) only checks lock
+    file pid stability across a 1.5s idle window — an indirect proxy. A stronger
+    assertion would spawn a second invocation and verify it exits without emitting
+    a second `[lifecycle] startup`, but that requires a new `launch-impl-again!`
+    driver verb. Deferrable; noted for post-v1 hardening.
+
+    **External dependency:** TestAnyware Task 8 (extended F-keys F13–F19), filed
+    2026-04-18 in that project's backlog. Gates only Task 26 Step 6 (live-VM
+    shake-down). All upstream tasks (14-25) execute independently.
+
+    **Next action:** Task 25 (.gitignore verification) then Task 26
+    (success-criteria checks + null-impl meaningful-failure smoke). The
+    live-VM shake-down within Task 26 stays gated on TestAnyware Task 8
+    (F13–F19 keymap) and the spec-v1-log-tailer blocker.
