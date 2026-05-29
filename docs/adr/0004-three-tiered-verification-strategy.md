@@ -15,5 +15,13 @@ runs last and gates only the things that genuinely require a real machine.
   vacuously.
 - Extended F-keys (VNC F13–F19) gate **only** the live-VM tier; all upstream
   tasks execute regardless of F-key support.
+- **Tier 3 has no surviving subject as of v1 (2026-05-29).** App-Spec v1 ships
+  verified at tiers 1–2 only. The sole example implementation it was authored
+  against — the Racket Modaliser — was abandoned and deleted on 2026-05-22
+  (`APIAnyware-MacOS` commit `fab954b`); its impl, test suite, and `#lang
+  app-spec` scenarios no longer exist, and the restart at `~/Development/Modaliser`
+  is a Swift app with no scenarios yet. The harness itself is complete and green
+  at tiers 1–2; re-establishing tier-3 coverage requires authoring scenarios and
+  an impl-config for a live app and is deferred to a future workstream.
 
 _Source: `LLM_STATE/core/memory.yaml` entry `app-spec-verification-is-three-tiered`._
