@@ -31,6 +31,7 @@
          "harness-logs.rkt"
          "harness-observations.rkt"
          "harness-state.rkt"
+         "log-tail.rkt"
          "../testanyware-sdk/exec.rkt"
          "../testanyware-sdk/input.rkt"
          "../testanyware-sdk/screenshot.rkt"
@@ -78,12 +79,7 @@
     #:chord-keys (lambda (m k) (gv-chord m k #:vm (vm-id)))
     #:click-at   (lambda (x y) (error 'click-at "not implemented in v1"))
     #:move-mouse (lambda (x y) (error 'move-mouse "not implemented in v1"))
-    #:log-tail
-      (lambda ()
-        (define-values (rc out _err)
-          (gv-exec "cat /Users/admin/.cache/modaliser/events.log 2>/dev/null || true"
-                   #:vm (vm-id)))
-        (if (zero? rc) out ""))
+    #:log-tail   (make-log-tail-fn #:vm (vm-id))
     #:ocr-read    (lambda () (gv-ocr #:vm (vm-id)))
     #:ax-snapshot (lambda () (gv-ax-snapshot #:vm (vm-id)))
     #:running-app?
