@@ -45,6 +45,20 @@ files live with each implementation (for the Racket-OO target, under
 itself contains only the language, runner, SDK helpers, config schema,
 and self-tests.
 
+### Project relationships
+
+App-Spec sits between two sibling projects, each a separate checkout on
+disk in the standard Linkuistics layout (peers of `AppSpec/`):
+
+- **Upstream — TestAnyware.** Provides the VM driver, agent, and vision
+  pipeline that App-Spec's `testanyware-sdk` helpers consume to drive and
+  observe the live macOS VM. App-Spec depends on it; see Prerequisites.
+- **Downstream — APIAnyware-MacOS.** Consumes App-Spec. Hosts the per-app
+  scenario suites (`knowledge/apps/<app>/scenarios/`, authored in
+  `#lang app-spec`) and the per-impl `--impl` config files (e.g.
+  `generation/targets/racket-oo/apps/modaliser/modaliser-impl.rkt`,
+  authored in `#lang app-spec/impl`).
+
 ## Prerequisites
 
 - Racket CS 8+
