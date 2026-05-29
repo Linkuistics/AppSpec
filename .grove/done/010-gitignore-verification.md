@@ -25,3 +25,18 @@ add only what's missing.
 ## Notes
 Smallest leaf; likely a one-line append or a pure confirmation. If already
 fully covered, record that finding and retire with no code change.
+
+## Outcome (2026-05-29)
+Plan Task 25's expected patterns were **stale** — verified against the code:
+- **Spec side:** the runner writes failure-capture artifacts to
+  `spec/artifacts/<name>-<ts>/` (`runner/lifecycle.rkt`
+  `default-artifact-root`), *not* the plan's `.scenario-run-*/`. Added the real
+  pattern `spec/artifacts/` to `AppSpec/.gitignore`. Verified: a runner-shaped
+  artifact dir no longer dirties `git status`; `git check-ignore` matches at
+  `.gitignore:6`.
+- **Impl side:** `APIAnyware-MacOS/.gitignore` already ignores
+  `knowledge/apps/*/artifacts/` (broader than the plan's
+  `knowledge/apps/modaliser/artifacts/`). No change needed; it's a separate
+  repo, out of this grove's scope. The plan's idea of adding an
+  `APIAnyware-MacOS/...` line to *AppSpec*'s gitignore assumed a combined tree
+  that doesn't exist — correctly skipped.

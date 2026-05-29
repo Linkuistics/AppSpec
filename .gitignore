@@ -1,2 +1,6 @@
 compiled/
 .DS_Store
+
+# App-Spec per-run failure-capture artifacts (runner/lifecycle.rkt,
+# default-artifact-root = spec/artifacts). Regenerable from runner output.
+spec/artifacts/
